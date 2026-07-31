@@ -26,6 +26,7 @@ def make_point_loaders(batch_size=2):
         train_dataset,
         batch_size=batch_size,
         shuffle=True,
+        drop_last=True,
     )
     valid_loader = DataLoader(
         valid_dataset,
@@ -33,4 +34,3 @@ def make_point_loaders(batch_size=2):
         shuffle=False,
     )
     return train_loader, valid_loader
-

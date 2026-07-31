@@ -63,4 +63,12 @@ To combine all completed runs into a table for comparison:
 python -m scripts.compare_runs
 ```
 
-The result is saved as `runs/comparison.csv`.
+The comparison tool produces:
+
+```text
+runs/comparison.csv          # spreadsheet-friendly table
+runs/comparison.json         # structured data for Python analysis
+runs/analysis.json           # best run by loss and accuracy
+runs/comparison_metrics.png  # best metric bars
+runs/comparison_curves.png   # validation curves across runs
+```

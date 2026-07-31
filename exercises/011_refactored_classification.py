@@ -10,12 +10,12 @@ from common.models import make_point_classifier
 
 @dataclass(frozen=True)
 class ExperimentConfig:
-    experiment_name: str = "point_classifier_baseline"
+    experiment_name: str = "point_classifier_hidden_3"
     seed: int = 0
     batch_size: int = 2
     learning_rate: float = 0.01
     epochs: int = 100
-    hidden_features: int = 8
+    hidden_features: int = 3
     num_classes: int = 2
     patience: int = 10
 

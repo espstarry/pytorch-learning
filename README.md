@@ -38,3 +38,29 @@ git commit -m "Complete first PyTorch linear exercise"
 ```
 
 Before committing, always read `git diff` so the commit contains only what you intended.
+
+## Reproducible Experiment Workflow
+
+Exercise 011 uses a reusable experiment runner. Change only the values in
+`ExperimentConfig`, then run:
+
+```powershell
+python -m exercises.011_refactored_classification
+```
+
+Each run is saved separately under:
+
+```text
+runs/<experiment_name>/<timestamp>/
+```
+
+The directory records the experiment configuration, Python/PyTorch/Git
+environment, epoch history, summary, plots, best model, and latest checkpoint.
+
+To combine all completed runs into a table for comparison:
+
+```powershell
+python -m scripts.compare_runs
+```
+
+The result is saved as `runs/comparison.csv`.

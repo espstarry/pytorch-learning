@@ -2,7 +2,7 @@ import torch
 from torch.utils.data import DataLoader, TensorDataset, random_split
 
 
-def make_point_loaders(batch_size=2):
+def make_point_loaders(batch_size=2, seed=0):
     x = torch.tensor([
         [0.0, 0.0],
         [0.0, 1.0],
@@ -19,7 +19,7 @@ def make_point_loaders(batch_size=2):
     train_dataset, valid_dataset = random_split(
         dataset,
         [6, 2],
-        generator=torch.Generator().manual_seed(0),
+        generator=torch.Generator().manual_seed(seed),
     )
 
     train_loader = DataLoader(
@@ -27,6 +27,7 @@ def make_point_loaders(batch_size=2):
         batch_size=batch_size,
         shuffle=True,
         drop_last=True,
+        generator=torch.Generator().manual_seed(seed),
     )
     valid_loader = DataLoader(
         valid_dataset,

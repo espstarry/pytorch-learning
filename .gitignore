@@ -5,4 +5,5 @@ data/
 demos/**/data/
 demos/**/tensor_data.json
 demos/**/occlusion_data.json
+demos/**/loss_data.json
 notebooks/tensor_data.json

@@ -1,4 +1,6 @@
 import argparse
+import sys
+from pathlib import Path
 
 import torch
 from torch import nn
@@ -7,6 +9,9 @@ from torchvision import datasets, transforms
 
 from model import LeNet
 from export_tensors import export
+
+sys.path.append(str(Path(__file__).resolve().parents[3]))
+from loss_viewer.recorder import LossRecorder
 
 
 parser = argparse.ArgumentParser()
@@ -27,23 +32,29 @@ model = LeNet().to(device)
 loss_fn = nn.CrossEntropyLoss()
 optimizer = torch.optim.SGD(model.parameters(), lr=0.05)
 print("device:", device)
+losses = LossRecorder("LeNet")
 
 
-def accuracy(loader):
+def evaluate(loader):
     correct = 0
     total = 0
+    total_loss = 0.0
     model.eval()
     with torch.no_grad():
         for images, labels in loader:
             images = images.to(device)
             labels = labels.to(device)
-            correct += (model(images).argmax(1) == labels).sum().item()
+            logits = model(images)
+            total_loss += loss_fn(logits, labels).item() * labels.size(0)
+            correct += (logits.argmax(1) == labels).sum().item()
             total += labels.size(0)
-    return correct / total
+    return total_loss / total, correct / total
 
 
 for epoch in range(1, args.epochs + 1):
     model.train()
+    train_loss = 0.0
+    train_items = 0
     for images, labels in train_loader:
         images = images.to(device)
         labels = labels.to(device)
@@ -52,8 +63,15 @@ for epoch in range(1, args.epochs + 1):
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
+        train_loss += loss.item() * labels.size(0)
+        train_items += labels.size(0)
 
-    print(f"epoch {epoch}: test_accuracy={accuracy(test_loader):.3f}")
+    test_loss, test_accuracy = evaluate(test_loader)
+    losses.add(epoch, train_loss=train_loss / train_items, test_loss=test_loss)
+    print(f"epoch {epoch}: train_loss={train_loss / train_items:.4f} test_loss={test_loss:.4f} test_accuracy={test_accuracy:.3f}")
+
+losses.save("loss_data.json")
+print("saved loss_data.json")
 
 if args.export_tensors:
     images, labels = next(iter(test_loader))

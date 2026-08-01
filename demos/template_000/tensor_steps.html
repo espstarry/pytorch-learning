@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TinyCNN Tensor Steps</title>
+  <style>
+    :root { color-scheme: light; font-family: Arial, sans-serif; }
+    body { margin: 0; background: #f5f7fb; color: #172033; }
+    main { max-width: 1180px; margin: 0 auto; padding: 32px 22px 60px; }
+    h1 { margin: 0 0 8px; font-size: 30px; }
+    .intro { color: #526078; margin: 0 0 24px; }
+    .steps { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+    button { border: 1px solid #b9c4d5; background: white; color: #172033; padding: 10px 14px; border-radius: 7px; cursor: pointer; }
+    button.active { background: #172033; color: white; border-color: #172033; }
+    .layout { display: grid; grid-template-columns: 300px 1fr; gap: 18px; }
+    .panel { background: white; border: 1px solid #dbe1eb; border-radius: 8px; padding: 18px; }
+    .panel h2 { margin: 0 0 15px; font-size: 20px; }
+    .meta { display: grid; gap: 12px; }
+    .meta div { border-bottom: 1px solid #edf0f5; padding-bottom: 10px; }
+    .meta span { display: block; color: #6a768a; font-size: 13px; margin-bottom: 4px; }
+    code { font-family: Consolas, monospace; font-size: 15px; }
+    .tensor-header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+    .legend { color: #6a768a; font-size: 13px; }
+    .matrix-wrap { overflow-x: auto; padding: 12px 0 8px; }
+    table { border-collapse: collapse; font-family: Consolas, monospace; font-size: 13px; }
+    td { width: 54px; height: 39px; text-align: center; border: 1px solid white; color: #172033; }
+    .caption { color: #526078; margin-top: 14px; line-height: 1.6; }
+    .formula { margin-top: 18px; background: #f3f5f9; padding: 12px; border-radius: 6px; }
+    .warning { margin-top: 20px; color: #6a768a; font-size: 13px; line-height: 1.6; }
+    @media (max-width: 760px) { .layout { grid-template-columns: 1fr; } td { width: 46px; } }
+  </style>
+</head>
+<body>
+<main>
+  <h1>TinyCNN：逐步观察 Tensor</h1>
+  <p class="intro">点击步骤，查看这一层的真实形状和一个代表性 channel 的数值内容。</p>
+  <div id="steps" class="steps"></div>
+  <section class="layout">
+    <aside class="panel">
+      <h2 id="step-title"></h2>
+      <div id="meta" class="meta"></div>
+      <div id="formula" class="formula"></div>
+    </aside>
+    <section class="panel">
+      <div class="tensor-header">
+        <h2>Tensor 内容预览</h2>
+        <div id="legend" class="legend"></div>
+      </div>
+      <div id="matrix" class="matrix-wrap"></div>
+      <p id="caption" class="caption"></p>
+    </section>
+  </section>
+  <p class="warning">说明：真实 tensor 仍然包含完整 batch 和所有 channel。为了能看清数值，这里只展示 batch=0、当前代表性 channel 的二维切片；左侧 shape 是完整 tensor 的 shape。</p>
+</main>
+<script>
+  const input = [
+    [0,0,1,1,1,0,0,0], [0,0,1,1,1,0,0,0], [0,0,1,1,1,0,0,0], [0,0,1,1,1,0,0,0],
+    [0,0,1,1,1,0,0,0], [0,0,1,1,1,0,0,0], [0,0,1,1,1,0,0,0], [0,0,1,1,1,0,0,0]
+  ];
+
+  function conv(matrix, kernel, bias = 0) {
+    const h = matrix.length, w = matrix[0].length, out = [];
+    for (let i = 0; i < h; i++) { out[i] = []; for (let j = 0; j < w; j++) {
+      let sum = bias;
+      for (let di = -1; di <= 1; di++) for (let dj = -1; dj <= 1; dj++) {
+        const x = i + di, y = j + dj;
+        sum += (x >= 0 && x < h && y >= 0 && y < w ? matrix[x][y] : 0) * kernel[di + 1][dj + 1];
+      }
+      out[i][j] = sum;
+    }}
+    return out;
+  }
+  function relu(matrix) { return matrix.map(row => row.map(x => Math.max(0, x))); }
+  function pool(matrix) {
+    const out = [];
+    for (let i = 0; i < matrix.length; i += 2) { out.push([]); for (let j = 0; j < matrix[0].length; j += 2) {
+      out[i / 2].push(Math.max(matrix[i][j], matrix[i + 1][j], matrix[i][j + 1], matrix[i + 1][j + 1]));
+    }}
+    return out;
+  }
+  function flat(matrix) { return matrix.flat(); }
+  const k1 = [[1,0,-1],[1,0,-1],[1,0,-1]];
+  const k2 = [[1,1,1],[0,0,0],[-1,-1,-1]];
+  const conv1 = conv(input, k1), relu1 = relu(conv1), pool1 = pool(relu1);
+  const conv2 = conv(pool1, k2), relu2 = relu(conv2), pool2 = pool(relu2);
+  const vector = flat(pool2);
+  const steps = [
+    { id:'input', title:'Input', shape:'[8, 1, 8, 8]', content:input, detail:'batch=0, channel=0', formula:'原始输入：一张 8×8 的灰度图像' },
+    { id:'conv1', title:'Conv2d(1 → 8)', shape:'[8, 8, 8, 8]', content:conv1, detail:'batch=0, channel=0', formula:'3×3 卷积，padding=1；空间尺寸不变，channel 从 1 变成 8' },
+    { id:'relu1', title:'ReLU', shape:'[8, 8, 8, 8]', content:relu1, detail:'batch=0, channel=0', formula:'每个元素 x 变成 max(0, x)，shape 不变' },
+    { id:'pool1', title:'MaxPool2d(2)', shape:'[8, 8, 4, 4]', content:pool1, detail:'batch=0, channel=0', formula:'每个 2×2 区域只保留最大值，高和宽减半' },
+    { id:'conv2', title:'Conv2d(8 → 16)', shape:'[8, 16, 4, 4]', content:conv2, detail:'batch=0, channel=0 preview', formula:'第二个卷积阶段；真实输出有 16 个 channel，这里展示其中一个示意 channel' },
+    { id:'relu2', title:'ReLU', shape:'[8, 16, 4, 4]', content:relu2, detail:'batch=0, channel=0 preview', formula:'再次把负数截为 0，shape 不变' },
+    { id:'pool2', title:'MaxPool2d(2)', shape:'[8, 16, 2, 2]', content:pool2, detail:'batch=0, channel=0 preview', formula:'空间尺寸再次减半，16 个 4×4 feature maps 变成 16 个 2×2 feature maps' },
+    { id:'flatten', title:'Flatten', shape:'[8, 64]', content:[vector], detail:'batch=0, 64 个值', formula:'把 [16, 2, 2] 展开成 64；教学数据使用 8×8 输入，因此这里是简化尺寸' }
+  ];
+  let current = 0;
+  const stepsEl = document.querySelector('#steps');
+  steps.forEach((step, i) => { const button = document.createElement('button'); button.textContent = step.title; button.onclick = () => render(i); button.dataset.index = i; stepsEl.appendChild(button); });
+  function color(value, min, max) { const ratio = (value - min) / (max - min || 1); const hue = 215 - ratio * 190; return `hsl(${hue}, 78%, ${86 - ratio * 22}%)`; }
+  function render(index) {
+    current = index; const step = steps[index];
+    document.querySelectorAll('button').forEach((b, i) => b.classList.toggle('active', i === index));
+    document.querySelector('#step-title').textContent = step.title;
+    document.querySelector('#meta').innerHTML = `<div><span>完整 tensor shape</span><code>${step.shape}</code></div><div><span>当前显示</span><code>${step.detail}</code></div><div><span>元素数量</span><code>${step.content.flat().length} 个可见值</code></div>`;
+    document.querySelector('#formula').textContent = step.formula;
+    const values = step.content.flat(), min = Math.min(...values), max = Math.max(...values);
+    document.querySelector('#legend').textContent = `数值范围：${min.toFixed(2)} 到 ${max.toFixed(2)}`;
+    const table = document.createElement('table'); step.content.forEach(row => { const tr = document.createElement('tr'); row.forEach(value => { const td = document.createElement('td'); td.textContent = value.toFixed(2); td.style.background = color(value, min, max); tr.appendChild(td); }); table.appendChild(tr); });
+    document.querySelector('#matrix').replaceChildren(table);
+    document.querySelector('#caption').textContent = index === 7 ? 'Flatten 后不再是二维 feature map，而是一维向量。下一步 Linear 会把它映射到 logits。' : '每个格子就是该 tensor 二维切片中的一个元素。颜色越暖，数值越大。';
+  }
+  render(0);
+</script>
+</body>
+</html>

@@ -1,9 +1,6 @@
 __pycache__/
 *.pyc
 .pytest_cache/
-checkpoints/
-*.pt
-*.pth
-artifacts/
-.vendor/
-runs/
+demos/**/data/
+demos/**/tensor_data.json
+demos/**/occlusion_data.json

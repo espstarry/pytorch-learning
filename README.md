@@ -1,74 +1,43 @@
-# PyTorch Learning
+# PyTorch Model Reading
 
-This repository tracks small PyTorch exercises.
+这个项目只做一件事：用最短的 PyTorch 代码读懂经典模型，并且马上跑起来。
 
-The goal is to learn by reading, filling in, running, and committing small examples.
-
-## Current Exercise
-
-- `exercises/001_fill_in_linear.py`
-
-Goal:
-Learn a linear function:
+每个模型都是一个独立的小例子，通常只有：
 
 ```text
-y = 2x + 1
+demos/
+  vision/lenet_100/
+    model.py       # 模型结构
+    train.py       # 最小训练和前向示例
+    README.md      # 结构与张量尺寸
 ```
 
-Core loop:
+代码刻意不包含日志系统、metric 封装、复杂 DataLoader、K 折验证、实验对比、checkpoint 或配置系统。数据优先使用代码生成的小数据，这样注意力可以放在模型如何构造。
 
-```text
-forward -> loss -> backward -> update parameters -> clear gradients
-```
+## 运行
 
-Important PyTorch side effects:
-
-- `loss.backward()` fills or accumulates `w.grad` and `b.grad`.
-- `with torch.no_grad()` prevents the parameter update from becoming part of the computation graph.
-- `w.grad.zero_()` and `b.grad.zero_()` clear gradients in-place.
-
-## Suggested Workflow
+在安装 PyTorch 的环境中，从项目根目录运行：
 
 ```powershell
-git status
-git diff
-python .\exercises\001_fill_in_linear.py
-git add exercises\001_fill_in_linear.py
-git commit -m "Complete first PyTorch linear exercise"
+python demos/template_000/train.py
 ```
 
-Before committing, always read `git diff` so the commit contains only what you intended.
-
-## Reproducible Experiment Workflow
-
-Exercise 011 uses a reusable experiment runner. Change only the values in
-`ExperimentConfig`, then run:
-
-```powershell
-python -m exercises.011_refactored_classification
-```
-
-Each run is saved separately under:
+后续模型会按主题放在这些目录：
 
 ```text
-runs/<experiment_name>/<timestamp>/
+vision/       LeNet, AlexNet, VGG, GoogLeNet, ResNet, ViT
+detection/    R-CNN, YOLO, SSD, U-Net
+sequence/     RNN, LSTM, GRU, Seq2Seq, Attention
+nlp/          Transformer, BERT, GPT, T5
+generative/   VAE, GAN, Diffusion
+graph/        GCN, GAT
+multimodal/   CLIP
 ```
 
-The directory records the experiment configuration, Python/PyTorch/Git
-environment, epoch history, summary, plots, best model, and latest checkpoint.
+学习顺序：先看 `model.py` 的层和 `forward`，再看 `train.py` 的四步循环：`预测 -> loss -> backward -> optimizer.step()`。
 
-To combine all completed runs into a table for comparison:
+每个 demo 默认还要提供 `export_tensors.py`，把 forward 的关键中间结果导出为 `tensor_data.json`。然后用 [Tensor Viewer](demos/tensor_viewer/viewer.html) 查看每一步的 shape 和内容。具体约定见 [demos/DEMO_RULES.md](demos/DEMO_RULES.md)。
 
-```powershell
-python -m scripts.compare_runs
-```
+## Colab GPU
 
-The comparison tool produces:
-
-```text
-runs/comparison.csv          # spreadsheet-friendly table
-runs/comparison.json         # structured data for Python analysis
-runs/analysis.json           # best run by loss and accuracy
-runs/comparison_metrics.png  # best metric bars
-runs/comparison_curves.png   # validation curves across runs
-```
+用于 VS Code + Colab 的 AlexNet 学习 Notebook 在 [notebooks/alexnet_colab.ipynb](notebooks/alexnet_colab.ipynb)。它会使用 Git 仓库拉取本项目，然后按需运行现有的 `.py` 脚本。

@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="520" viewBox="0 0 1200 520">
+  <style>
+    text { font-family: Arial, sans-serif; fill: #172033; }
+    .title { font-size: 28px; font-weight: 700; }
+    .label { font-size: 18px; font-weight: 700; }
+    .shape { font-size: 16px; fill: #526078; }
+    .small { font-size: 14px; fill: #526078; }
+    .box { stroke: #172033; stroke-width: 2; rx: 10; }
+    .arrow { stroke: #526078; stroke-width: 3; marker-end: url(#arrow); }
+  </style>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#526078"/>
+    </marker>
+  </defs>
+
+  <rect width="1200" height="520" fill="#f7f9fc"/>
+  <text x="600" y="48" text-anchor="middle" class="title">TinyCNN</text>
+  <text x="600" y="78" text-anchor="middle" class="small">输入一批 16 × 16 的单通道图像，输出 2 个类别的 logits</text>
+
+  <rect x="45" y="190" width="145" height="125" class="box" fill="#d8e9ff"/>
+  <text x="117" y="225" text-anchor="middle" class="label">Input</text>
+  <text x="117" y="257" text-anchor="middle" class="shape">[8, 1, 16, 16]</text>
+  <text x="117" y="285" text-anchor="middle" class="small">batch, channel, H, W</text>
+
+  <line x1="190" y1="252" x2="225" y2="252" class="arrow"/>
+  <rect x="225" y="160" width="145" height="185" class="box" fill="#dff4e5"/>
+  <text x="297" y="198" text-anchor="middle" class="label">Conv2d</text>
+  <text x="297" y="230" text-anchor="middle" class="shape">1 → 8 channels</text>
+  <text x="297" y="258" text-anchor="middle" class="shape">kernel 3 × 3</text>
+  <text x="297" y="286" text-anchor="middle" class="shape">padding = 1</text>
+  <text x="297" y="322" text-anchor="middle" class="small">[8, 8, 16, 16]</text>
+
+  <line x1="370" y1="252" x2="405" y2="252" class="arrow"/>
+  <rect x="405" y="190" width="110" height="125" class="box" fill="#fff0c7"/>
+  <text x="460" y="230" text-anchor="middle" class="label">ReLU</text>
+  <text x="460" y="270" text-anchor="middle" class="shape">same shape</text>
+
+  <line x1="515" y1="252" x2="550" y2="252" class="arrow"/>
+  <rect x="550" y="190" width="130" height="125" class="box" fill="#ffe0d6"/>
+  <text x="615" y="230" text-anchor="middle" class="label">MaxPool2d</text>
+  <text x="615" y="270" text-anchor="middle" class="shape">2 × 2</text>
+  <text x="615" y="298" text-anchor="middle" class="small">[8, 8, 8, 8]</text>
+
+  <line x1="680" y1="252" x2="715" y2="252" class="arrow"/>
+  <rect x="715" y="160" width="145" height="185" class="box" fill="#dff4e5"/>
+  <text x="787" y="198" text-anchor="middle" class="label">Conv2d</text>
+  <text x="787" y="230" text-anchor="middle" class="shape">8 → 16 channels</text>
+  <text x="787" y="258" text-anchor="middle" class="shape">kernel 3 × 3</text>
+  <text x="787" y="286" text-anchor="middle" class="shape">padding = 1</text>
+  <text x="787" y="322" text-anchor="middle" class="small">[8, 16, 8, 8]</text>
+
+  <line x1="860" y1="252" x2="895" y2="252" class="arrow"/>
+  <rect x="895" y="190" width="110" height="125" class="box" fill="#ffe0d6"/>
+  <text x="950" y="230" text-anchor="middle" class="label">MaxPool2d</text>
+  <text x="950" y="270" text-anchor="middle" class="shape">2 × 2</text>
+  <text x="950" y="298" text-anchor="middle" class="small">[8, 16, 4, 4]</text>
+
+  <line x1="1005" y1="252" x2="1040" y2="252" class="arrow"/>
+  <rect x="1040" y="160" width="120" height="185" class="box" fill="#e8ddff"/>
+  <text x="1100" y="198" text-anchor="middle" class="label">Flatten</text>
+  <text x="1100" y="235" text-anchor="middle" class="shape">16 × 4 × 4</text>
+  <text x="1100" y="265" text-anchor="middle" class="shape">= 256</text>
+  <text x="1100" y="315" text-anchor="middle" class="small">Linear: 256 → 2</text>
+
+  <text x="600" y="420" text-anchor="middle" class="label">最终输出 logits: [8, 2]</text>
+  <text x="600" y="452" text-anchor="middle" class="small">训练时：CrossEntropyLoss → backward() → optimizer.step()</text>
+</svg>

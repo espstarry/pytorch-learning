@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tensor Viewer</title>
+  <style>
+    :root { font-family: Arial, sans-serif; color: #172033; background: #f4f7fb; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    main { max-width: 1440px; margin: 0 auto; padding: 26px 22px 48px; }
+    h1 { margin: 0; font-size: 30px; }
+    h2 { margin: 0; font-size: 18px; }
+    p { color: #526078; line-height: 1.6; }
+    button, select, input { font: inherit; }
+    button, select { border: 1px solid #c5d0df; background: white; color: #172033; border-radius: 6px; min-height: 36px; padding: 7px 10px; }
+    button { cursor: pointer; }
+    button:hover { border-color: #487ebe; }
+    button.primary { background: #1d5fa7; border-color: #1d5fa7; color: white; }
+    button.active { background: #172033; border-color: #172033; color: white; }
+    .subhead { margin: 6px 0 20px; }
+    .drop { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 13px 16px; background: white; border: 2px dashed #b8c7d9; border-radius: 8px; color: #526078; }
+    .drop.over { background: #eaf4ff; border-color: #1d5fa7; }
+    .file-label { position: relative; overflow: hidden; display: inline-flex; }
+    .file-label input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+    .workspace { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 16px; margin-top: 16px; }
+    .card { background: white; border: 1px solid #dce3ed; border-radius: 8px; }
+    .steps { padding: 12px; max-height: 720px; overflow: auto; }
+    .step-button { display: grid; grid-template-columns: 28px 1fr; width: 100%; min-height: 52px; text-align: left; margin-bottom: 6px; padding: 8px; }
+    .step-button b { font-size: 14px; }
+    .step-button small { display: block; color: #64738a; margin-top: 4px; font-family: Consolas, monospace; }
+    .step-button.active small { color: #dce9f8; }
+    .step-index { color: #64738a; font-family: Consolas, monospace; font-size: 12px; padding-top: 2px; }
+    .step-button.active .step-index { color: #a9d0ff; }
+    .content { display: grid; gap: 16px; min-width: 0; }
+    .controls { display: grid; gap: 12px; padding: 14px; }
+    .control-row { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; }
+    .controls label { display: grid; gap: 5px; color: #526078; font-size: 12px; }
+    .controls .grow { min-width: 210px; flex: 1; }
+    .shortcut { margin-left: auto; color: #64738a; font-size: 12px; padding-bottom: 8px; }
+    .info { display: grid; grid-template-columns: repeat(4, minmax(130px, 1fr)); gap: 1px; background: #dce3ed; overflow: hidden; }
+    .info > div { background: white; padding: 13px 15px; }
+    .info span { display: block; color: #64738a; font-size: 12px; margin-bottom: 5px; }
+    code { font-family: Consolas, monospace; font-size: 14px; }
+    .view-card { padding: 16px; }
+    .view-head { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 14px; }
+    .view-head .space { flex: 1; }
+    .range { color: #526078; font-size: 13px; }
+    .canvas-wrap { overflow: auto; background: #f7f9fc; border: 1px solid #e1e7ef; border-radius: 6px; min-height: 260px; padding: 14px; position: relative; }
+    canvas { display: block; image-rendering: pixelated; }
+    .table-wrap { overflow: auto; max-height: 580px; }
+    table { border-collapse: collapse; font-family: Consolas, monospace; font-size: 12px; }
+    table.vector-table { border-collapse: separate; border-spacing: 0 5px; }
+    td { min-width: 68px; height: 34px; padding: 3px 6px; text-align: right; border: 1px solid white; }
+    .tooltip { position: fixed; display: none; padding: 7px 9px; background: #172033; color: white; font: 12px Consolas, monospace; border-radius: 5px; pointer-events: none; z-index: 2; }
+    .description { margin: 14px 0 0; }
+    .empty { display: grid; place-items: center; min-height: 230px; color: #64738a; }
+    .empty[hidden] { display: none; }
+    .error { color: #b42318; }
+    @media (max-width: 900px) { .workspace { grid-template-columns: 1fr; } .steps { display: flex; max-height: none; overflow-x: auto; } .step-button { min-width: 170px; margin-right: 6px; } .info { grid-template-columns: repeat(2, 1fr); } .shortcut { width: 100%; margin-left: 0; } }
+    @media (max-width: 560px) { main { padding: 20px 12px 36px; } .drop { align-items: flex-start; flex-direction: column; } .info { grid-template-columns: 1fr; } h1 { font-size: 25px; } }
+  </style>
+</head>
+<body>
+<main>
+  <h1 id="title">Tensor Viewer</h1>
+  <p class="subhead">导入 PyTorch 导出的 JSON，逐层观察 shape、数值范围和 feature map 内容。</p>
+  <div id="drop" class="drop"><span id="file-status">拖入 tensor_data.json，或选择一个文件。</span><span class="file-label"><button class="primary">选择 JSON</button><input id="file" type="file" accept=".json,application/json"></span></div>
+
+  <div class="workspace">
+    <aside class="card steps" id="steps" aria-label="Tensor steps"></aside>
+    <section class="content">
+      <section class="card controls">
+        <div class="control-row">
+          <button id="previous" title="上一步 (Left Arrow)">← 上一步</button>
+          <button id="next" title="下一步 (Right Arrow)">下一步 →</button>
+          <label class="grow">当前步骤<select id="step"></select></label>
+          <span class="shortcut">← → 切换步骤</span>
+        </div>
+        <div class="control-row">
+          <label>Batch<select id="batch"></select></label>
+          <label>Channel<select id="channel"></select></label>
+          <label>热力图格子<select id="cell-size"><option value="12">紧凑</option><option value="22" selected>标准</option><option value="36">放大</option></select></label>
+          <button id="heatmap" class="active">热力图</button><button id="table">数值表</button>
+          <span class="shortcut">↑ ↓ 切换 channel</span>
+        </div>
+      </section>
+
+      <section class="card info" id="info"></section>
+
+      <section class="card view-card">
+        <div class="view-head"><h2 id="view-title">二维切片</h2><span class="space"></span><span id="range" class="range"></span></div>
+        <div id="canvas-wrap" class="canvas-wrap"><canvas id="canvas"></canvas><div id="empty" class="empty">等待 tensor 数据</div></div>
+        <div id="table-wrap" class="table-wrap" hidden></div>
+        <p id="description" class="description"></p>
+      </section>
+    </section>
+  </div>
+</main>
+<div id="tooltip" class="tooltip"></div>
+<script>
+  const sample = { model: 'TinyCNN sample', steps: [
+    { name: 'input', shape: [2, 1, 8, 8], values: [[[[0,0,1,1,1,0,0,0],[0,0,1,1,1,0,0,0],[0,0,1,1,1,0,0,0],[0,0,1,1,1,0,0,0],[0,0,1,1,1,0,0,0],[0,0,1,1,1,0,0,0],[0,0,1,1,1,0,0,0],[0,0,1,1,1,0,0,0]]], [[[1,0,0,0,0,1,1,1],[1,0,0,0,0,1,1,1],[1,0,0,0,0,1,1,1],[1,0,0,0,0,1,1,1],[1,0,0,0,0,1,1,1],[1,0,0,0,0,1,1,1],[1,0,0,0,0,1,1,1],[1,0,0,0,0,1,1,1]]]], description: '输入 batch 中的两张简单图案。' },
+    { name: 'conv1', shape: [2, 8, 8, 8], values: [[[[0,0,1,2,1,0,0,0],[0,0,2,4,2,0,0,0],[0,0,3,6,3,0,0,0],[0,0,3,6,3,0,0,0],[0,0,3,6,3,0,0,0],[0,0,3,6,3,0,0,0],[0,0,2,4,2,0,0,0],[0,0,1,2,1,0,0,0]]]], description: '卷积输出的第 0 个 channel。真实导出时可包含多个 channel。' }
+  ]};
+  let data = sample, stepIndex = 0, mode = 'heatmap';
+  const $ = id => document.getElementById(id);
+  const number = value => Number.isFinite(Number(value)) ? Number(value) : 0;
+  const isArray = Array.isArray;
+  const mean = values => values.reduce((sum, value) => sum + value, 0) / values.length;
+  const selectOptions = (element, count, value) => { element.innerHTML = Array.from({ length: Math.max(count, 1) }, (_, i) => `<option value="${i}">${i}</option>`).join(''); element.value = Math.min(Number(value) || 0, Math.max(count - 1, 0)); };
+  const current = () => data.steps[stepIndex];
+  const isVector = step => (step.shape || []).length === 2;
+  function matrixFor(step, batch, channel) {
+    let value = step.values?.[batch] ?? step.values?.[0] ?? [];
+    if (isArray(value) && isArray(value[0]) && isArray(value[0][0])) value = value[channel] ?? value[0];
+    let matrix;
+    if (!isArray(value)) matrix = [[number(value)]];
+    else if (!isArray(value[0])) matrix = [value.map(number)];
+    else matrix = value.map(row => isArray(row) ? row.map(number) : [number(row)]);
+    if (isVector(step) && matrix.length === 1 && matrix[0].length > 20) {
+      return Array.from({ length: Math.ceil(matrix[0].length / 20) }, (_, row) => matrix[0].slice(row * 20, row * 20 + 20));
+    }
+    return matrix;
+  }
+  function dimensions(values) {
+    const batches = isArray(values) ? values.length : 0;
+    const candidate = values?.[0];
+    const channels = isArray(candidate) && isArray(candidate[0]) && isArray(candidate[0][0]) ? candidate.length : 1;
+    return { batches, channels };
+  }
+  function load(value, label = '已载入数据') {
+    if (!value || !isArray(value.steps) || !value.steps.length) return fail('JSON 需要包含至少一个 steps 项。');
+    data = value; stepIndex = 0; $('title').textContent = `${data.model || 'Model'} · Tensor Viewer`; $('file-status').textContent = `${label}：${data.steps.length} 个步骤`; render();
+  }
+  function fail(message) { $('file-status').innerHTML = `<span class="error">${message}</span>`; }
+  function render() {
+    const step = current(), savedBatch = $('batch').value, savedChannel = $('channel').value, dims = dimensions(step.values);
+    $('steps').replaceChildren(...data.steps.map((item, i) => { const button = document.createElement('button'); button.className = `step-button ${i === stepIndex ? 'active' : ''}`; button.innerHTML = `<span class="step-index">${String(i + 1).padStart(2, '0')}</span><span><b>${item.name}</b><small>[${(item.shape || []).join(', ')}]</small></span>`; button.onclick = () => { stepIndex = i; render(); }; return button; }));
+    $('step').innerHTML = data.steps.map((item, i) => `<option value="${i}">${i + 1}. ${item.name}</option>`).join(''); $('step').value = stepIndex;
+    selectOptions($('batch'), dims.batches, savedBatch); selectOptions($('channel'), dims.channels, savedChannel);
+    const matrix = matrixFor(step, Number($('batch').value), Number($('channel').value));
+    const values = matrix.flat(); const min = Math.min(...values), max = Math.max(...values), avg = mean(values), variance = mean(values.map(v => (v - avg) ** 2));
+    const matrixLabel = isVector(step) ? `向量 ${step.shape[1]}，按 ${matrix[0]?.length || 0} 列显示` : `${matrix.length} × ${matrix[0]?.length || 0}`;
+    $('info').innerHTML = `<div><span>完整 shape</span><code>[${(step.shape || []).join(', ')}]</code></div><div><span>当前切片</span><code>batch=${$('batch').value}, channel=${$('channel').value}</code></div><div><span>当前显示</span><code>${matrixLabel}</code></div><div><span>统计</span><code>mean ${avg.toFixed(4)} · std ${Math.sqrt(variance).toFixed(4)}</code></div>`;
+    $('range').textContent = `min ${min.toFixed(4)} · max ${max.toFixed(4)} · ${values.length} values`;
+    $('description').textContent = step.description || '此步骤没有说明。'; $('view-title').textContent = `${step.name} · 二维切片`;
+    drawHeatmap(matrix, min, max); drawTable(matrix, min, max);
+    $('previous').disabled = stepIndex === 0; $('next').disabled = stepIndex === data.steps.length - 1;
+  }
+  function color(value, min, max) { const ratio = (value - min) / (max - min || 1); const hue = 220 - ratio * 205; return `hsl(${hue}, 78%, ${91 - ratio * 37}%)`; }
+  function drawHeatmap(matrix, min, max) {
+    const size = Number($('cell-size').value), rowGap = isVector(current()) ? 5 : 0, canvas = $('canvas'), rows = matrix.length, cols = matrix[0]?.length || 0;
+    canvas.width = Math.max(cols * size, 1); canvas.height = Math.max(rows * size, 1); canvas.style.width = `${Math.max(cols * size, 1)}px`; canvas.style.height = `${Math.max(rows * size, 1)}px`;
+    const ctx = canvas.getContext('2d'); ctx.clearRect(0, 0, canvas.width, canvas.height);
+    matrix.forEach((row, rowIndex) => row.forEach((value, colIndex) => { ctx.fillStyle = color(value, min, max); ctx.fillRect(colIndex * size, rowIndex * size, size, size - rowGap); if (size >= 22 && !rowGap) { ctx.strokeStyle = 'rgba(255,255,255,.65)'; ctx.strokeRect(colIndex * size, rowIndex * size, size, size); } }));
+    $('empty').hidden = Boolean(rows && cols);
+  }
+  function drawTable(matrix, min, max) { const table = document.createElement('table'); if (isVector(current())) table.className = 'vector-table'; matrix.forEach(row => { const tr = document.createElement('tr'); row.forEach(value => { const td = document.createElement('td'); td.textContent = value.toFixed(4); td.style.background = color(value, min, max); tr.appendChild(td); }); table.appendChild(tr); }); $('table-wrap').replaceChildren(table); }
+  function changeStep(delta) { stepIndex = Math.max(0, Math.min(data.steps.length - 1, stepIndex + delta)); render(); }
+  function setMode(next) { mode = next; $('heatmap').classList.toggle('active', mode === 'heatmap'); $('table').classList.toggle('active', mode === 'table'); $('canvas-wrap').hidden = mode !== 'heatmap'; $('table-wrap').hidden = mode !== 'table'; }
+  $('step').onchange = event => { stepIndex = Number(event.target.value); render(); };
+  $('batch').onchange = render; $('channel').onchange = render; $('cell-size').onchange = render; $('previous').onclick = () => changeStep(-1); $('next').onclick = () => changeStep(1); $('heatmap').onclick = () => setMode('heatmap'); $('table').onclick = () => setMode('table');
+  document.addEventListener('keydown', event => {
+    if (event.target.matches('select, input')) return;
+    if (event.key === 'ArrowLeft') { event.preventDefault(); changeStep(-1); }
+    if (event.key === 'ArrowRight') { event.preventDefault(); changeStep(1); }
+    if (event.key === 'ArrowUp') { event.preventDefault(); $('channel').value = Math.max(0, Number($('channel').value) - 1); render(); }
+    if (event.key === 'ArrowDown') { event.preventDefault(); $('channel').value = Math.min($('channel').options.length - 1, Number($('channel').value) + 1); render(); }
+  });
+  $('canvas').onmousemove = event => { const rect = $('canvas').getBoundingClientRect(), size = Number($('cell-size').value), row = Math.floor((event.clientY - rect.top) / size), col = Math.floor((event.clientX - rect.left) / size), step = current(), matrix = matrixFor(step, Number($('batch').value), Number($('channel').value)), value = matrix[row]?.[col]; if (value === undefined) return; const index = row * (matrix[0]?.length || 0) + col; $('tooltip').style.display = 'block'; $('tooltip').style.left = `${event.clientX + 12}px`; $('tooltip').style.top = `${event.clientY + 12}px`; $('tooltip').textContent = isVector(step) ? `vector[${index}] = ${value.toFixed(6)}` : `[${row}, ${col}] = ${value.toFixed(6)}`; };
+  $('canvas').onmouseleave = () => { $('tooltip').style.display = 'none'; };
+  function readFile(file) { if (!file) return; const reader = new FileReader(); reader.onload = () => { try { load(JSON.parse(reader.result), file.name); } catch { fail('无法解析 JSON 文件。'); } }; reader.readAsText(file); }
+  $('file').onchange = event => readFile(event.target.files[0]); $('drop').ondragover = event => { event.preventDefault(); $('drop').classList.add('over'); }; $('drop').ondragleave = () => $('drop').classList.remove('over'); $('drop').ondrop = event => { event.preventDefault(); $('drop').classList.remove('over'); readFile(event.dataTransfer.files[0]); };
+  setMode('heatmap'); load(sample, '已载入内置示例');
+</script>
+</body>
+</html>

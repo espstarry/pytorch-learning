@@ -79,7 +79,8 @@ for epoch in range(1, args.epochs + 1):
     model.train()
     train_loss = 0.0
     train_items = 0
-    for images, labels in train_loader:
+    total_batches = len(train_loader)
+    for batch, (images, labels) in enumerate(train_loader, start=1):
         images = images.to(device)
         labels = labels.to(device)
         loss = loss_fn(model(images), labels)
@@ -88,7 +89,12 @@ for epoch in range(1, args.epochs + 1):
         optimizer.step()
         train_loss += loss.item() * labels.size(0)
         train_items += labels.size(0)
+        width = 24
+        filled = int(width * batch / total_batches)
+        bar = "#" * filled + "-" * (width - filled)
+        print(f"\repoch {epoch:02d}/{args.epochs:02d} [{bar}] {batch:>4}/{total_batches} loss={loss.item():.4f}", end="", flush=True)
 
+    print()
     test_loss, test_accuracy = evaluate(test_loader)
     losses.add(epoch, train_loss=train_loss / train_items, test_loss=test_loss, test_accuracy=test_accuracy)
     print(f"epoch {epoch}: train_loss={train_loss / train_items:.4f} test_loss={test_loss:.4f} test_accuracy={test_accuracy:.3f}")

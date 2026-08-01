@@ -21,6 +21,9 @@ parser.add_argument("--test-samples", type=int, default=200)
 parser.add_argument("--source", choices=["torchvision", "huggingface"], default="torchvision")
 args = parser.parse_args()
 
+class_names = ["airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"]
+print("CIFAR-10 labels:", dict(enumerate(class_names)))
+
 # CIFAR-10 是 32×32 RGB；Resize 后符合经典 AlexNet 的 224×224 输入。
 transform = transforms.Compose([transforms.Resize(224), transforms.ToTensor()])
 

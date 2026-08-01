@@ -33,7 +33,7 @@
 }
 ```
 
-完整示例见 [`tensor_viewer/README.md`](tensor_viewer/README.md)。
+完整示例见 [`../viewers/tensor_viewer/README.md`](../viewers/tensor_viewer/README.md)。
 
 ## 实现方式
 
@@ -51,7 +51,7 @@ steps.append({
 导出后，用通用查看器打开：
 
 ```text
-demos/tensor_viewer/viewer.html
+viewers/metric_viewer.html
 ```
 
 这样每个新 demo 都有相同的学习入口：先看 `model.py`，再运行 `export_tensors.py`，最后在浏览器中逐步查看 tensor。

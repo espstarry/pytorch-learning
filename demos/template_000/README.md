@@ -10,7 +10,7 @@
 - [Feature Map 堆叠图](tinycnn_feature_maps.svg)
 - [逐步 Tensor 内容可视化](tensor_steps.html)
 
-通用版查看器：[demos/tensor_viewer/viewer.html](../tensor_viewer/viewer.html)
+通用版查看器：[Metric Viewer](../../viewers/metric_viewer.html)
 
 这个模板还应配套一个 `export_tensors.py`，用于导出 `tensor_data.json`，供通用查看器读取。
 

@@ -30,7 +30,7 @@ python demos/vision/alexnet_110/train.py
 python demos/vision/alexnet_110/export_tensors.py
 ```
 
-`export_tensors.py` 生成 `tensor_data.json`，可拖入 [Tensor Viewer](../../tensor_viewer/viewer.html)。这个 demo 使用随机 RGB 图像，只用于理解模型的结构和数据流。
+`export_tensors.py` 生成 `tensor_data.json`，可拖入 [Metric Viewer](../../../viewers/metric_viewer.html) 的 Tensor 页面。这个 demo 使用随机 RGB 图像，只用于理解模型的结构和数据流。
 
 ## 用真实 CIFAR-10 测试
 

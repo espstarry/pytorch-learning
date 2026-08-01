@@ -9,7 +9,7 @@ from torchvision import datasets, transforms
 
 from model import AlexNet
 
-sys.path.append(str(Path(__file__).resolve().parents[3]))
+sys.path.append(str(Path(__file__).resolve().parents[3] / "viewers"))
 from loss_viewer.recorder import LossRecorder
 
 

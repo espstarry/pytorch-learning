@@ -36,7 +36,7 @@ multimodal/   CLIP
 
 学习顺序：先看 `model.py` 的层和 `forward`，再看 `train.py` 的四步循环：`预测 -> loss -> backward -> optimizer.step()`。
 
-每个 demo 默认还要提供 `export_tensors.py`，把 forward 的关键中间结果导出为 `tensor_data.json`。然后用 [Tensor Viewer](demos/tensor_viewer/viewer.html) 查看每一步的 shape 和内容。具体约定见 [demos/DEMO_RULES.md](demos/DEMO_RULES.md)。
+每个 demo 默认还要提供 `export_tensors.py`，把 forward 的关键中间结果导出为 `tensor_data.json`。然后用 [Metric Viewer](viewers/metric_viewer.html) 切换查看 loss、accuracy 和 tensor。具体约定见 [demos/DEMO_RULES.md](demos/DEMO_RULES.md)。
 
 ## Colab GPU
 

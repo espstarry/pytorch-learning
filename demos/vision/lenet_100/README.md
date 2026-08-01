@@ -25,7 +25,7 @@ python demos/vision/lenet_100/train.py
 python demos/vision/lenet_100/export_tensors.py
 ```
 
-第二条命令会生成 `tensor_data.json`。然后打开 [Tensor Viewer](../../tensor_viewer/viewer.html)，拖入这个 JSON 文件即可查看每一步的 shape 和 tensor 内容。
+第二条命令会生成 `tensor_data.json`。然后打开 [Metric Viewer](../../../viewers/metric_viewer.html)，切换到 Tensor 页面并拖入这个 JSON 文件即可查看每一步的 shape 和 tensor 内容。
 
 ## 用真实 MNIST 测试
 
@@ -41,7 +41,7 @@ python demos/vision/lenet_100/train_mnist.py
 python demos/vision/lenet_100/train_mnist.py --epochs 1 --export-tensors
 ```
 
-运行完成后，把 `tensor_data.json` 拖入 [Tensor Viewer](../../tensor_viewer/viewer.html)。如果只想查看真实 MNIST 输入经过未训练 LeNet 的形状和数值，也可以直接运行 `export_tensors.py`。
+运行完成后，把 `tensor_data.json` 拖入 [Metric Viewer](../../../viewers/metric_viewer.html)。如果只想查看真实 MNIST 输入经过未训练 LeNet 的形状和数值，也可以直接运行 `export_tensors.py`。
 
 ## 验证底部笔画的作用
 

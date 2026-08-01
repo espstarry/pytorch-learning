@@ -19,13 +19,18 @@ parser.add_argument("--batch-size", type=int, default=16)
 parser.add_argument("--train-samples", type=int, default=1000)
 parser.add_argument("--test-samples", type=int, default=200)
 parser.add_argument("--source", choices=["torchvision", "huggingface"], default="torchvision")
+parser.add_argument("--lr", type=float, default=0.05)
 args = parser.parse_args()
 
 class_names = ["airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"]
 print("CIFAR-10 labels:", dict(enumerate(class_names)))
 
 # CIFAR-10 是 32×32 RGB；Resize 后符合经典 AlexNet 的 224×224 输入。
-transform = transforms.Compose([transforms.Resize(224), transforms.ToTensor()])
+transform = transforms.Compose([
+    transforms.Resize(224),
+    transforms.ToTensor(),
+    transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2470, 0.2435, 0.2616)),
+])
 
 if args.source == "torchvision":
     train_set = datasets.CIFAR10("data", train=True, download=True, transform=transform)
@@ -54,7 +59,7 @@ test_loader = DataLoader(test_set, batch_size=args.batch_size)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = AlexNet(num_classes=10).to(device)
 loss_fn = nn.CrossEntropyLoss()
-optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
+optimizer = torch.optim.SGD(model.parameters(), lr=args.lr)
 print("device:", device)
 losses = LossRecorder("AlexNet")
 

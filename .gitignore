@@ -1,6 +1,7 @@
 __pycache__/
 *.pyc
 .pytest_cache/
+data/
 demos/**/data/
 demos/**/tensor_data.json
 demos/**/occlusion_data.json

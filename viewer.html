@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Metric Viewer</title>
+  <style>
+    :root { font-family: Arial, sans-serif; color: #172033; background: #f4f7fb; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    main { max-width: 1500px; margin: auto; padding: 24px 20px; }
+    h1 { margin: 0 0 16px; }
+    .tabs { display: flex; gap: 8px; margin-bottom: 14px; }
+    button { border: 1px solid #c5d0df; border-radius: 6px; padding: 9px 14px; background: white; color: #172033; font: inherit; cursor: pointer; }
+    button.active { background: #172033; color: white; }
+    iframe { width: 100%; height: calc(100vh - 120px); min-height: 700px; border: 1px solid #dce3ed; border-radius: 8px; background: white; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Metric Viewer</h1>
+  <div class="tabs">
+    <button class="active" data-page="loss_viewer/viewer.html">Loss / Accuracy</button>
+    <button data-page="tensor_viewer/viewer.html">Tensor</button>
+  </div>
+  <iframe id="page" src="loss_viewer/viewer.html" title="viewer"></iframe>
+</main>
+<script>
+  const page = document.querySelector("#page");
+  document.querySelectorAll("button").forEach(button => button.onclick = () => {
+    document.querySelector("button.active").classList.remove("active");
+    button.classList.add("active");
+    page.src = button.dataset.page;
+  });
+</script>
+</body>
+</html>

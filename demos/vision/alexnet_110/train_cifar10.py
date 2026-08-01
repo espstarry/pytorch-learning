@@ -90,7 +90,7 @@ for epoch in range(1, args.epochs + 1):
         train_items += labels.size(0)
 
     test_loss, test_accuracy = evaluate(test_loader)
-    losses.add(epoch, train_loss=train_loss / train_items, test_loss=test_loss)
+    losses.add(epoch, train_loss=train_loss / train_items, test_loss=test_loss, test_accuracy=test_accuracy)
     print(f"epoch {epoch}: train_loss={train_loss / train_items:.4f} test_loss={test_loss:.4f} test_accuracy={test_accuracy:.3f}")
 
 losses.save("loss_data.json")
